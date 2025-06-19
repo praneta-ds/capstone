@@ -9,7 +9,9 @@ variables:
   imageName: 'ecommerce-flask'
 
 steps:
-- task: Checkout@1
+- checkout: self
+
+
 
 - task: DockerInstaller@0
   displayName: 'Install Docker'
