@@ -1,0 +1,33 @@
+trigger: none  # No trigger from GitHub directly
+
+resources:
+  pipelines:
+    - pipeline: ciPipeline          # Alias name (used in this YAML)
+      source: ci-pipeline           # Name of your CI pipeline in Azure DevOps
+      trigger:
+        branches:
+          include:
+            - main                  # Run this CD when CI pipeline runs on main
+
+stages:
+- stage: Deploy
+  displayName: Deploy to AKS
+  jobs:
+  - job: DeployToAKS
+    displayName: Deploy Flask App to AKS
+    pool:
+      name: ss-vm-agent-pool                 # or use self-hosted agent pool name
+    steps:
+    - task: Kubernetes@1
+      displayName: Deploy Flask App
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscription: 'ACR-ServiceConnection'
+        azureResourceGroup: 'ss-rg'
+        kubernetesCluster: 'ss-aks-cluster'
+        namespace: default
+        command: apply
+        useConfigurationFile: true
+        configuration: |
+          k8s/app-deployment.yaml
+          k8s/app-service.yaml
