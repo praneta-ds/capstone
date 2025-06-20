@@ -12,12 +12,16 @@ resources:
 stages:
 - stage: Deploy
   displayName: Deploy to AKS
+  dependsOn: []
+  condition: succeeded()
   jobs:
   - job: DeployToAKS
     displayName: Deploy Flask App to AKS
     pool:
       name: ss-vm-agent-pool                 # or use self-hosted agent pool name
     steps:
+    - download: ciPipeline
+      artifact: drop
     - task: Kubernetes@1
       displayName: Deploy Flask App
       inputs:
