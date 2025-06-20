@@ -1,13 +1,14 @@
-trigger: none  # No trigger from GitHub directly
+# cd-pipeline.yml
+trigger: none  # No GitHub trigger directly
 
 resources:
   pipelines:
-    - pipeline: ciPipeline          # Alias name (used in this YAML)
-      source: ci-pipeline           # Name of your CI pipeline in Azure DevOps
+    - pipeline: ciPipeline                # Alias for CI
+      source: ci-pipeline                 # CI pipeline name in Azure DevOps
       trigger:
         branches:
           include:
-            - main                  # Run this CD when CI pipeline runs on main
+            - main
 
 stages:
 - stage: Deploy
@@ -18,10 +19,12 @@ stages:
   - job: DeployToAKS
     displayName: Deploy Flask App to AKS
     pool:
-      name: ss-vm-agent-pool                 # or use self-hosted agent pool name
+      name: ss-vm-agent-pool
+
     steps:
     - download: ciPipeline
       artifact: drop
+
     - task: Kubernetes@1
       displayName: Deploy Flask App
       inputs:
