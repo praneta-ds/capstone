@@ -22,7 +22,7 @@ stages:
       displayName: Deploy Flask App
       inputs:
         connectionType: 'Azure Resource Manager'
-        azureSubscription: 'ACR-ServiceConnection'
+        azureSubscription: 'ssethumadav'
         azureResourceGroup: 'ss-rg'
         kubernetesCluster: 'ss-aks-cluster'
         namespace: default
