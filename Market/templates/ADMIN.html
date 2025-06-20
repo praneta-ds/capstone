@@ -1,17 +1,20 @@
 {% extends "base.html" %}
 {% block body %}
-    <h1 style="text-align: center;">Welcome to Admin Panel</h1><hr style="background-color: #FFF;">
+    <h1 style="text-align: center;">Welcome to Admin Panel</h1>
+    <hr style="background-color: #FFF;">
+
     <div class="row" style="margin-left: 5px; margin-right: 5px;">
+        <!-- Product Control -->
         <div class="col-8">
             <h3 style="text-align: center;">Control Products</h3>
             <table class="table table-hover table-dark">
                 <thead>
                     <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Price</th>
-                        <th scope="col">Owner</th>
-                        <th scope="col">Control</th>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Owner</th>
+                        <th>Control</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -20,26 +23,50 @@
                         <td>{{ item.id }}</td>
                         <td>{{ item.name }}</td>
                         <td>{{ item.prettier_price }}</td>
-                        <td><strong>{{ item.owned_user.username }}</strong></td>
                         <td>
-                            <button class="btn btn-outline btn-info">Update</button>
-                            <button class="btn btn-outline btn-danger">Delete</button>
+                            {% if item.owned_user %}
+                                <strong>{{ item.owned_user.username }}</strong>
+                            {% else %}
+                                None
+                            {% endif %}
+                        </td>
+                        <td>
+                            <!-- Update button (feature pending) -->
+                            <button class="btn btn-outline btn-info" disabled>Update</button>
+                            <form method="POST" action="{{ url_for('DeleteItem', item_id=item.id) }}" style="display:inline;">
+                                <button class="btn btn-outline btn-danger" type="submit">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+
+            <!-- Add New Item -->
+            <hr>
+            <h4 style="text-align: center;">Add New Product</h4>
+            <form method="POST" action="{{ url_for('AddItem') }}">
+                <div class="form-group">
+                    <input class="form-control" name="name" placeholder="Item Name" required>
+                    <input class="form-control" name="price" type="number" placeholder="Price" required>
+                    <input class="form-control" name="barcode" placeholder="Barcode" required>
+                    <textarea class="form-control" name="description" placeholder="Description" required></textarea>
+                    <button class="btn btn-success mt-2" type="submit">Add Item</button>
+                </div>
+            </form>
         </div>
+
+        <!-- User Control -->
         <div class="col-4">
             <h3 style="text-align: center;">Control Users</h3>
             <table class="table table-hover table-dark">
                 <thead>
                     <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Username</th>
-                        <th scope="col">Budget</th>
-                        <th scope="col">Cart</th>
-                        <th scope="col">Control</th>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Budget</th>
+                        <th>Cart</th>
+                        <th>Control</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -48,13 +75,17 @@
                         <td>{{ user.id }}</td>
                         <td>{{ user.username }}</td>
                         <td>{{ user.prettier_budget }}</td>
-                        {% if user.items.__len__() != 0 %}
-                        <td><strong style="text-align: center;">{{ user.items.__len__() }}</strong> Items</td>
-                        {% else %}
-                        <td>Empty</td>
-                        {% endif %}
                         <td>
-                            <button class="btn btn-outline btn-danger">Delete</button>
+                            {% if user.items|length != 0 %}
+                                <strong>{{ user.items|length }}</strong> Items
+                            {% else %}
+                                Empty
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('DeleteUser', user_id=user.id) }}">
+                                <button class="btn btn-outline btn-danger" type="submit">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}

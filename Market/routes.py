@@ -68,7 +68,7 @@ def LoginPage():
 @app.route("/admin")
 @login_required
 def AdminPage():
-    if not current_user.username=='admin':
+    if current_user.username != 'admin':
         flash('Please login as admin to access the admin panel!', category='danger')
         return redirect(url_for('LoginPage'))
     return render_template('ADMIN.html', title='Admin', users=User.query.all(), items=Item.query.all())
@@ -78,3 +78,53 @@ def LogoutPage():
     logout_user()
     flash("You have been logged out!", category='info')
     return redirect(url_for('HomePage'))
+
+@app.route("/delete_user/<int:user_id>", methods=["POST"])
+@login_required
+def DeleteUser(user_id):
+    if current_user.username != 'admin':
+        flash("Unauthorized access", category='danger')
+        return redirect(url_for('AdminPage'))
+    
+    user = User.query.get(user_id)
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        flash(f"Deleted user: {user.username}", category='info')
+    return redirect(url_for('AdminPage'))
+
+@app.route("/delete_item/<int:item_id>", methods=["POST"])
+@login_required
+def DeleteItem(item_id):
+    if current_user.username != 'admin':
+        flash("Unauthorized access", category='danger')
+        return redirect(url_for('AdminPage'))
+
+    item = Item.query.get(item_id)
+    if item:
+        db.session.delete(item)
+        db.session.commit()
+        flash(f"Deleted item: {item.name}", category='info')
+    return redirect(url_for('AdminPage'))
+
+@app.route("/add_item", methods=["POST"])
+@login_required
+def AddItem():
+    if current_user.username != 'admin':
+        flash("Unauthorized access", category='danger')
+        return redirect(url_for('AdminPage'))
+    
+    name = request.form.get('name')
+    price = request.form.get('price')
+    barcode = request.form.get('barcode')
+    description = request.form.get('description')
+    
+    if name and price and barcode and description:
+        new_item = Item(name=name, price=int(price), barcode=barcode, description=description)
+        db.session.add(new_item)
+        db.session.commit()
+        flash(f"Added item: {name}", category='success')
+    else:
+        flash("Please fill all fields", category='danger')
+    
+    return redirect(url_for('AdminPage'))
