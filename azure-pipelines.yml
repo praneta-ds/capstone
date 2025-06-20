@@ -32,3 +32,6 @@ steps:
     tags: |
       $(Build.BuildId)
       latest
+
+- publish: $(Pipeline.Workspace)
+  artifact: drop
