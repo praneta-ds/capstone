@@ -29,7 +29,7 @@ stages:
       displayName: Deploy Flask App
       inputs:
         connectionType: 'Azure Resource Manager'
-        azureSubscription: 'AKS-ServiceConnection'
+        azureSubscription: 'AKS-ServiceConnection-1'
         azureResourceGroup: 'ss-rg'
         kubernetesCluster: 'ss-aks-cluster'
         namespace: default
