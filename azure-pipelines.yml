@@ -20,30 +20,35 @@ stages:
     displayName: Build, Test, SonarCloud Analysis, and Push Image
     pool:
       name: ss-vm-agent-pool
+
     steps:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: '3.10'
+      displayName: 'Set Python Version'
 
     - script: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest coverage
-      displayName: 'Install dependencies and test tools'
+        pip install pytest pytest-cov
+      displayName: 'Install Dependencies and Test Tools'
 
     - script: |
         pytest --cov=. --cov-report=xml
-      displayName: 'Run Pytest and generate coverage.xml'
+      displayName: 'Run Tests and Generate Coverage Report'
 
     - task: SonarCloudPrepare@1
       inputs:
-        SonarCloud: 'sonar-capstone'  # name of the service connection in Azure DevOps
-        organization: 'devuser130746'  # e.g., devuser130746-org
+        SonarCloud: 'sonar-capstone'  # Update to match your actual SonarCloud service connection
+        organization: 'devuser130746'
         scannerMode: 'CLI'
         configMode: 'manual'
         cliProjectKey: 'capstone'
         cliProjectName: 'capstone'
         cliSources: '.'
+        extraProperties: |
+          sonar.python.coverage.reportPaths=coverage.xml
+      displayName: 'Prepare SonarCloud Analysis'
 
     - task: SonarCloudAnalyze@1
       displayName: 'Run SonarCloud Analysis'
@@ -54,7 +59,7 @@ stages:
       displayName: 'Publish SonarCloud Quality Gate Result'
 
     - task: Docker@2
-      displayName: Build and push image to ACR
+      displayName: 'Build and Push Image to ACR'
       inputs:
         command: buildAndPush
         repository: $(imageRepository)
@@ -63,8 +68,9 @@ stages:
         tags: |
           $(tag)
 
-    - upload: manifests
+    - publish: $(Pipeline.Workspace)/manifests
       artifact: manifests
+      displayName: 'Publish Kubernetes Manifests'
 
 - stage: Deploy
   displayName: Deploy to AKS
@@ -80,14 +86,14 @@ stages:
         deploy:
           steps:
           - task: KubernetesManifest@0
-            displayName: Create imagePullSecret
+            displayName: 'Create imagePullSecret'
             inputs:
               action: createSecret
               secretName: $(imagePullSecret)
               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
 
           - task: KubernetesManifest@0
-            displayName: Deploy Kubernetes Manifests
+            displayName: 'Deploy Kubernetes Manifests'
             inputs:
               action: deploy
               manifests: |
