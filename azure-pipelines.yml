@@ -14,13 +14,45 @@ variables:
 
 stages:
 - stage: Build
-  displayName: Build and Push Stage
+  displayName: Build, Test, Analyze and Push Stage
   jobs:
-  - job: Build
-    displayName: Build and Push Image
+  - job: BuildAndAnalyze
+    displayName: Build, Test, SonarCloud Analysis, and Push Image
     pool:
       name: ss-vm-agent-pool
     steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.10'
+
+    - script: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest coverage
+      displayName: 'Install dependencies and test tools'
+
+    - script: |
+        pytest --cov=. --cov-report=xml
+      displayName: 'Run Pytest and generate coverage.xml'
+
+    - task: SonarCloudPrepare@1
+      inputs:
+        SonarCloud: 'sonar-capstone'  # name of the service connection in Azure DevOps
+        organization: 'devuser130746'  # e.g., devuser130746-org
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: 'capstone'
+        cliProjectName: 'capstone'
+        cliSources: '.'
+
+    - task: SonarCloudAnalyze@1
+      displayName: 'Run SonarCloud Analysis'
+
+    - task: SonarCloudPublish@1
+      inputs:
+        pollingTimeoutSec: '300'
+      displayName: 'Publish SonarCloud Quality Gate Result'
+
     - task: Docker@2
       displayName: Build and push image to ACR
       inputs:
