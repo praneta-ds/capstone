@@ -1,62 +1,40 @@
-# Deploy to Azure Kubernetes Service
-# Build and push image to Azure Container Registry; Deploy to Azure Kubernetes Service
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+# CD Pipeline - Deploy to Azure Kubernetes Service
 
-trigger:
-- main
+trigger: none  # CD pipeline does NOT trigger on code changes
 
 resources:
-- repo: self
+  pipelines:
+  - pipeline: ciPipeline            # Alias for CI pipeline resource
+    source: ci-pipeline             # CI pipeline name
+    trigger:
+      branches:
+        include:
+        - main
 
 variables:
-
-  # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: '17d0aa1f-40a2-4606-8d53-2bf2871d728c'
   imageRepository: 'capstone'
   containerRegistry: 'ecomacr598.azurecr.io'
-  dockerfilePath: '**/Dockerfile'
-  tag: '$(Build.BuildId)'
+  tag: '$(resources.pipeline.ciPipeline.runName)'  # Get tag from CI pipeline
   imagePullSecret: 'ecomacr5981330f57c-auth'
 
-  # Agent VM image name (not used with self-hosted agent pool)
- 
-
 stages:
-- stage: Build
-  displayName: Build stage
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      name: ss-vm-agent-pool   # <-- Updated to custom self-hosted agent pool
-    steps:
-    - task: Docker@2
-      displayName: Build and push an image to container registry
-      inputs:
-        command: buildAndPush
-        repository: $(imageRepository)
-        dockerfile: $(dockerfilePath)
-        containerRegistry: $(dockerRegistryServiceConnection)
-        tags: |
-          $(tag)
-
-    - upload: manifests
-      artifact: manifests
-
 - stage: Deploy
   displayName: Deploy stage
-  dependsOn: Build
 
   jobs:
   - deployment: Deploy
-    displayName: Deploy
+    displayName: Deploy to AKS
     pool:
-      name: ss-vm-agent-pool   # <-- Updated to custom self-hosted agent pool
+      name: ss-vm-agent-pool
     environment: 'capstone.default'
     strategy:
       runOnce:
         deploy:
           steps:
+          - download: ciPipeline
+            artifact: manifests
+
           - task: KubernetesManifest@0
             displayName: Create imagePullSecret
             inputs:
@@ -69,8 +47,8 @@ stages:
             inputs:
               action: deploy
               manifests: |
-                $(Pipeline.Workspace)/manifests/deployment.yml
-                $(Pipeline.Workspace)/manifests/service.yml
+                $(Pipeline.Workspace)/ciPipeline/manifests/deployment.yml
+                $(Pipeline.Workspace)/ciPipeline/manifests/service.yml
               imagePullSecrets: |
                 $(imagePullSecret)
               containers: |
