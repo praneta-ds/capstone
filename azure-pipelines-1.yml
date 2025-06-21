@@ -45,6 +45,8 @@ stages:
       runOnce:
         deploy:
           steps:
+          - download: ciPipeline
+            artifact: drop
           - task: KubernetesManifest@0
             displayName: Create imagePullSecret
             inputs:
@@ -57,8 +59,8 @@ stages:
             inputs:
               action: deploy
               manifests: |
-                $(Build.BuildSourceDirectory)/k8s/app-deployment.yaml
-                $(Build.BuildSourceDirectory)/k8s/app-service.yaml
+                k8s/app-deployment.yaml
+                k8s/app-service.yaml
               imagePullSecrets: |
                 $(imagePullSecret)
               containers: |
