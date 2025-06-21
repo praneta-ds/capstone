@@ -2,11 +2,17 @@
 # Build and push image to Azure Container Registry; Deploy to Azure Kubernetes Service
 # https://docs.microsoft.com/azure/devops/pipelines/languages/docker
 
-trigger:
-- main
+# cd-pipeline.yml
+trigger: none  # No GitHub trigger directly
 
 resources:
-- repo: self
+  pipelines:
+    - pipeline: ciPipeline                # Alias for CI
+      source: ci-pipeline                 # CI pipeline name in Azure DevOps
+      trigger:
+        branches:
+          include:
+            - main
 
 variables:
 
@@ -26,13 +32,14 @@ stages:
 
 - stage: Deploy
   displayName: Deploy stage
-  dependsOn: Build
+  dependsOn: []
+  condition: succeeded()
 
   jobs:
   - deployment: Deploy
     displayName: Deploy
     pool:
-      vmImage: $(vmImageName)
+      name: ss-vm-agent-pool
     environment: 'ssethumadavEcommerce.default'
     strategy:
       runOnce:
