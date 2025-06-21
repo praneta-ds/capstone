@@ -19,7 +19,6 @@ variables:
   imagePullSecret: 'ecomacr59838990618-auth'
 
   # Agent VM image name
-  vmImageName: 'name: ss-vm-agent-pool'
 
 
 stages:
@@ -29,7 +28,7 @@ stages:
   - job: Build
     displayName: Build
     pool:
-      name: $(vmImageName)
+      name: 'ss-vm-agent-pool'
     steps:
     - task: Docker@2
       displayName: Build and push an image to container registry
@@ -52,7 +51,7 @@ stages:
   - deployment: Deploy
     displayName: Deploy
     pool:
-      vmImage: $(vmImageName)
+      name: 'ss-vm-agent-pool'
     environment: 'ssethumadavEcommerce-9661.default'
     strategy:
       runOnce:
