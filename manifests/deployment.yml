@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: ssethumadavecommerce 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ssethumadavecommerce
+  template:
+    metadata:
+      labels:
+        app: ssethumadavecommerce 
+    spec:
+      containers:
+        - name: ssethumadavecommerce 
+          image: ecomacr598.azurecr.io/ssethumadavecommerce
+          ports:
+          - containerPort: 80
