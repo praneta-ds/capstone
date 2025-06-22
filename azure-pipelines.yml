@@ -5,12 +5,12 @@ resources:
 - repo: self
 
 variables:
-  dockerRegistryServiceConnection: 'cefbfb7c-e78a-47f1-bb76-ba28dbfd2550'
+  dockerRegistryServiceConnection: '68f9d5ad-fe4e-463b-9d78-618bc60bb150'
   imageRepository: 'capstone'
-  containerRegistry: 'ecomacr598.azurecr.io'
+  containerRegistry: 'ssacr.azurecr.io'
   dockerfilePath: '**/Dockerfile'
-  tag: '$(Build.BuildId)'
-  imagePullSecret: 'ecomacr59808ca-auth'
+  tag: '$(Build.BuildId)'  # Single source of truth
+  imagePullSecret: 'ssacr-auth'
 
 stages:
 - stage: Build
@@ -39,7 +39,7 @@ stages:
 
     - task: SonarCloudPrepare@1
       inputs:
-        SonarCloud: 'sonar-capstone'  # Update to match your actual SonarCloud service connection
+        SonarCloud: 'sonar-capstone'
         organization: 'devuser130746'
         scannerMode: 'CLI'
         configMode: 'manual'
@@ -67,6 +67,7 @@ stages:
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
+          latest
 
     - publish: $(Pipeline.Workspace)/manifests
       artifact: manifests
