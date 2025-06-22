@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: capstone 
-          image: ecomacr598.azurecr.io/capstone
+          image: ssacr.azurecr.io/capstone
           ports:
           - containerPort: 80
