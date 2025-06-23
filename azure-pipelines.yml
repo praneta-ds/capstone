@@ -81,7 +81,7 @@ stages:
     displayName: Deploy to AKS
     pool:
       name: 'ss-vm-agent-pool'
-    environment: 'capstone-1311.default'
+    environment: 'capstone-1311'
     strategy:
       runOnce:
         deploy:
@@ -92,7 +92,7 @@ stages:
               action: createSecret
               secretName: $(imagePullSecret)
               dockerRegistryEndpoint: $(dockerRegistryServiceConnection)
-              kubernetesServiceConnection: 'ss-aks-service-connection'
+              kubernetesServiceConnection: 'ss-aks-connection-clean'
 
           - task: KubernetesManifest@0
             displayName: 'Deploy Kubernetes Manifests'
@@ -105,4 +105,4 @@ stages:
                 $(imagePullSecret)
               containers: |
                 $(containerRegistry)/$(imageRepository):$(tag)
-              kubernetesServiceConnection: 'ss-aks-service-connection'
+              kubernetesServiceConnection: 'ss-aks-connection-clean'
