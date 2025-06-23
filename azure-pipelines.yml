@@ -5,7 +5,7 @@ resources:
 - repo: self
 
 variables:
-  dockerRegistryServiceConnection: '68f9d5ad-fe4e-463b-9d78-618bc60bb150'
+  dockerRegistryServiceConnection: '9f67059c-5de8-4be6-9335-4fa46e103606'
   imageRepository: 'capstone'
   containerRegistry: 'ssacr598.azurecr.io'
   dockerfilePath: '**/Dockerfile'
