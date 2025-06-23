@@ -9,7 +9,7 @@ variables:
   imageRepository: 'capstone'
   containerRegistry: 'ssacr.azurecr.io'
   dockerfilePath: '**/Dockerfile'
-  tag: '$(Build.BuildId)'  # Single source of truth
+  tag: '$(Build.BuildId)'
   imagePullSecret: 'ssacr-auth'
 
 stages:
@@ -68,6 +68,12 @@ stages:
         tags: |
           $(tag)
           latest
+
+    - script: |
+        echo "Injecting image tag into deployment.yml..."
+        sed -i "s|__CONTAINER_TAG__|$(tag)|g" manifests/deployment.yml
+        cat manifests/deployment.yml
+      displayName: 'Inject Tag into Manifest'
 
     - publish: $(Pipeline.Workspace)/manifests
       artifact: manifests
