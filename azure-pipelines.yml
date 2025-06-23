@@ -7,7 +7,7 @@ resources:
 variables:
   dockerRegistryServiceConnection: '68f9d5ad-fe4e-463b-9d78-618bc60bb150'
   imageRepository: 'capstone'
-  containerRegistry: 'ssacr.azurecr.io'
+  containerRegistry: 'ssacr598.azurecr.io'
   dockerfilePath: '**/Dockerfile'
   tag: '$(Build.BuildId)'
   imagePullSecret: 'ssacr-auth'
