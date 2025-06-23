@@ -9,7 +9,7 @@ variables:
   imageRepository: 'capstone'
   containerRegistry: 'ssacr598.azurecr.io'
   dockerfilePath: '**/Dockerfile'
-  tag: '$(Build.BuildId)'
+  tag: 'latest'
   imagePullSecret: 'ssacr-auth'
 
 stages:
