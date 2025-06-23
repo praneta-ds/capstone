@@ -70,10 +70,18 @@ stages:
           latest
 
     - script: |
+        echo "Before substitution:"
+        grep 'image:' manifests/deployment.yml || echo "No image line found."
+
         echo "Injecting image tag into deployment.yml..."
         sed -i "s|__CONTAINER_TAG__|$(tag)|g" manifests/deployment.yml
+
+        echo "After substitution:"
+        grep 'image:' manifests/deployment.yml || echo "No image line found."
+
+        echo "Full deployment.yml after tag injection:"
         cat manifests/deployment.yml
-      displayName: 'Inject Tag into Manifest'
+      displayName: 'Inject and Verify Image Tag in Manifest'
 
     - publish: $(Pipeline.Workspace)/manifests
       artifact: manifests
