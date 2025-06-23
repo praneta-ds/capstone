@@ -5,12 +5,12 @@ resources:
 - repo: self
 
 variables:
-  dockerRegistryServiceConnection: '9f67059c-5de8-4be6-9335-4fa46e103606'
+  dockerRegistryServiceConnection: '246cfea4-a60a-4f5b-9821-75b2bbd2e2a6'
   imageRepository: 'capstone'
   containerRegistry: 'ssacr598.azurecr.io'
   dockerfilePath: '**/Dockerfile'
   tag: '$(Build.BuildId)'  # 🔁 Use build ID as tag
-  imagePullSecret: 'ssacr-auth'
+  imagePullSecret: 'acr-auth'
 
 stages:
 # ---------------------------------------------
