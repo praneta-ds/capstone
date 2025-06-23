@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: capstone 
-          image: ssacr.azurecr.io/capstone:__CONTAINER_TAG__
+          image: placeholder
           ports:
           - containerPort: 80
