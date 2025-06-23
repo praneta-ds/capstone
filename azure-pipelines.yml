@@ -118,7 +118,7 @@ stages:
               imagePullSecrets: |
                 $(imagePullSecret)
               containers: |
-                $(containerRegistry)/$(imageRepository):$(tag)
+                ssacr598.azurecr.io/capstone:$(Build.BuildId)
               kubernetesServiceConnection: 'ss-aks-connection-clean'
 
           - script: |
