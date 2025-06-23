@@ -110,5 +110,18 @@ stages:
               imagePullSecrets: |
                 $(imagePullSecret)
               containers: |
-                ssacr.azurecr.io/capstone:$(tag)
+                $(containerRegistry)/$(imageRepository):$(tag)
               kubernetesServiceConnection: 'ss-aks-connection-clean'
+
+          - script: |
+              echo "Waiting for rollout to complete..."
+              kubectl rollout status deployment/capstone --timeout=120s
+            displayName: 'Wait for Deployment Rollout'
+
+          - script: |
+              echo "Showing pod details for debugging..."
+              kubectl get pods -o wide
+              kubectl describe deployment capstone
+              kubectl logs --tail=50 $(kubectl get pods -l app=capstone -o jsonpath="{.items[0].metadata.name}")
+            displayName: 'Debug Deployment (on Failure)'
+            continueOnError: true
