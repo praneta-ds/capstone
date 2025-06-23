@@ -14,9 +14,7 @@ spec:
     spec:
       containers:
         - name: capstone
-          image: ssacr598.azurecr.io/capstone
+          image: ssacr598.azurecr.io/capstone:__CONTAINER_TAG__   # 👈 placeholder for injection
           imagePullPolicy: Always
           ports:
             - containerPort: 80
-      imagePullSecrets:
-        - name: acr-auth
