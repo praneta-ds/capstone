@@ -9,10 +9,13 @@ variables:
   imageRepository: 'capstone'
   containerRegistry: 'ssacr598.azurecr.io'
   dockerfilePath: '**/Dockerfile'
-  tag: 'latest'
+  tag: '$(Build.BuildId)'  # 🔁 Use build ID as tag
   imagePullSecret: 'ssacr-auth'
 
 stages:
+# ---------------------------------------------
+# STAGE 1: BUILD, TEST, ANALYZE, PUSH TO ACR
+# ---------------------------------------------
 - stage: Build
   displayName: Build, Test, Analyze and Push Stage
   jobs:
@@ -67,26 +70,21 @@ stages:
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
-          latest
 
     - script: |
-        echo "Before substitution:"
-        grep 'image:' manifests/deployment.yml || echo "No image line found."
-
         echo "Injecting image tag into deployment.yml..."
         sed -i "s|__CONTAINER_TAG__|$(tag)|g" manifests/deployment.yml
-
-        echo "After substitution:"
-        grep 'image:' manifests/deployment.yml || echo "No image line found."
-
-        echo "Full deployment.yml after tag injection:"
+        echo "Resulting deployment.yml:"
         cat manifests/deployment.yml
-      displayName: 'Inject and Verify Image Tag in Manifest'
+      displayName: 'Inject Image Tag into Manifest'
 
     - publish: $(Pipeline.Workspace)/manifests
       artifact: manifests
       displayName: 'Publish Kubernetes Manifests'
 
+# ---------------------------------------------
+# STAGE 2: DEPLOY TO AKS
+# ---------------------------------------------
 - stage: Deploy
   displayName: Deploy to AKS
   dependsOn: Build
@@ -117,8 +115,6 @@ stages:
                 $(Pipeline.Workspace)/manifests/service.yml
               imagePullSecrets: |
                 $(imagePullSecret)
-              containers: |
-                ssacr598.azurecr.io/capstone:$(Build.BuildId)
               kubernetesServiceConnection: 'ss-aks-connection-clean'
 
           - script: |
@@ -127,7 +123,7 @@ stages:
             displayName: 'Wait for Deployment Rollout'
 
           - script: |
-              echo "Showing pod details for debugging..."
+              echo "Debugging deployment..."
               kubectl get pods -o wide
               kubectl describe deployment capstone
               kubectl logs --tail=50 $(kubectl get pods -l app=capstone -o jsonpath="{.items[0].metadata.name}")
