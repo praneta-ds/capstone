@@ -17,3 +17,5 @@ spec:
           image: placeholder
           ports:
           - containerPort: 80
+      imagePullSecrets:
+        - name: ssacr-auth
