@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: capstone 
-          image: placeholder
+          image: ssacr.azurecr.io/capstone:__CONTAINER_TAG__
           ports:
           - containerPort: 80
       imagePullSecrets:
