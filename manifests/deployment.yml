@@ -1,7 +1,7 @@
-apiVersion : apps/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: capstone 
+  name: capstone
 spec:
   replicas: 1
   selector:
@@ -10,12 +10,13 @@ spec:
   template:
     metadata:
       labels:
-        app: capstone 
+        app: capstone
     spec:
       containers:
-        - name: capstone 
-          image: ssacr598.azurecr.io/capstone:latest
+        - name: capstone
+          image: ssacr598.azurecr.io/capstone
+          imagePullPolicy: Always
           ports:
-          - containerPort: 80
+            - containerPort: 80
       imagePullSecrets:
         - name: acr-auth
