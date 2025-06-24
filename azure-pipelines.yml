@@ -125,7 +125,7 @@ stages:
         - script: |
             imageName="sethumadavacr.azurecr.io/capstone:$(Build.BuildId)"
             sed -i "s|__IMAGE_NAME__|$imageName|g" manifests/deployment.yml
-            displayName: "Inject full image name"
+          displayName: "Inject full image name"
 
 
     - job: DeployToCluster2
