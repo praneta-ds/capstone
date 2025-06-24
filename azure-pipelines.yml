@@ -7,16 +7,22 @@ pool:
   name: ss-vm-agent-pool
 
 variables:
-  imageName: sethumadavacr.azurecr.io/capstone:$(Build.BuildId)
-  azureServiceConnection: 'terraform-service-connection'
-  acrServiceConnection: 'acr-service-connection'
-  sonarConnection: 'sonar-capstone'
-  terraformDirectory: '.'
+  - group: capstone-variables
+  - name: imageName
+    value: sethumadavacr.azurecr.io/capstone:$(Build.BuildId)
+  - name: azureServiceConnection
+    value: 'terraform-service-connection'
+  - name: acrServiceConnection
+    value: 'acr-service-connection'
+  - name: sonarConnection
+    value: 'sonar-capstone'
+  - name: terraformDirectory
+    value: '.'
 
+stages:
 # =======================
 # 1. SonarCloud Analysis
 # =======================
-stages:
 - stage: SonarCloud
   displayName: 'SonarCloud Code Analysis'
   jobs:
@@ -25,7 +31,7 @@ stages:
         - task: SonarCloudPrepare@1
           inputs:
             SonarCloud: $(sonarConnection)
-            organization: 'devuser130746'                    # ✅ Your SonarCloud org
+            organization: 'devuser130746'
             scannerMode: 'CLI'
             configMode: 'manual'
             cliProjectKey: 'capstone'
@@ -33,13 +39,18 @@ stages:
             cliSources: '.'
 
         - script: |
+            sudo apt-get update
+            sudo apt-get install -y unzip wget
+            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+            unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+            export PATH=$(pwd)/sonar-scanner-5.0.1.3006-linux/bin:$PATH
             sonar-scanner \
               -Dsonar.projectKey=capstone \
               -Dsonar.organization=devuser130746 \
               -Dsonar.sources=. \
               -Dsonar.host.url=https://sonarcloud.io \
               -Dsonar.login=$(SONAR_TOKEN)
-          displayName: 'Run SonarCloud Scanner'
+          displayName: 'Install and Run SonarCloud Scanner'
 
         - task: SonarCloudPublish@1
           inputs:
