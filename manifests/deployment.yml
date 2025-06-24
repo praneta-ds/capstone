@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: capstone
-          image: ssacr598.azurecr.io/capstone:__CONTAINER_TAG__   # 👈 placeholder for injection
+          image: sethumadavacr.azurecr.io/capstone:__CONTAINER_TAG__  # Placeholder for pipeline replacement
           imagePullPolicy: Always
           ports:
             - containerPort: 80
