@@ -108,7 +108,7 @@ stages:
         #       $(imageName)
 
 # =========================================
-# 3. Deploy to Two AKS Clusters (Same RG)
+# 3. Deploy to Two AKS Clusters 
 # =========================================
 - stage: DeployToAKS
   displayName: 'Deploy to Both AKS Clusters'
