@@ -19,15 +19,26 @@ variables:
   - name: terraformDirectory
     value: '.'
 
-stages:
 # =======================
 # 1. SonarCloud Analysis
 # =======================
+stages:
 - stage: SonarCloud
   displayName: 'SonarCloud Code Analysis'
   jobs:
     - job: Sonar
       steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.x'
+
+        - script: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+            pip install pytest pytest-cov
+            pytest --cov=Market --cov-report=xml
+          displayName: 'Install dependencies & Run Tests with Coverage'
+
         - task: SonarCloudPrepare@1
           inputs:
             SonarCloud: $(sonarConnection)
@@ -37,6 +48,8 @@ stages:
             cliProjectKey: 'capstone'
             cliProjectName: 'capstone'
             cliSources: '.'
+            extraProperties: |
+              sonar.python.coverage.reportPaths=coverage.xml
 
         - script: |
             sudo apt-get update
@@ -86,33 +99,12 @@ stages:
             tags: |
               $(imageName)
 
-# ================================
-# 3. Terraform Infra Provisioning
-# ================================
-- stage: Terraform
-  displayName: 'Terraform Provisioning'
-  dependsOn: BuildAndPush
-  jobs:
-    - job: TerraformApply
-      steps:
-        - task: AzureCLI@2
-          displayName: 'Terraform Init and Apply'
-          inputs:
-            azureSubscription: $(azureServiceConnection)
-            scriptType: bash
-            scriptLocation: inlineScript
-            workingDirectory: $(terraformDirectory)
-            inlineScript: |
-              terraform init -upgrade
-              terraform plan -out=tfplan
-              terraform apply -auto-approve tfplan
-
 # =========================================
-# 4. Deploy to Two AKS Clusters (Same RG)
+# 3. Deploy to Two AKS Clusters (Same RG)
 # =========================================
 - stage: DeployToAKS
   displayName: 'Deploy to Both AKS Clusters'
-  dependsOn: Terraform
+  dependsOn: BuildAndPush
   jobs:
     - job: DeployToCluster1
       displayName: 'Deploy to AKS Cluster 1 (VNET1)'
