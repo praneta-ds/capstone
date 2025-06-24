@@ -9,45 +9,48 @@ pool:
 variables:
   imageName: sethumadavacr.azurecr.io/capstone:$(Build.BuildId)
   azureServiceConnection: 'terraform-service-connection'
-  sonarConnection: 'SonarQubeServiceConnection'
+  acrServiceConnection: 'acr-service-connection'
+  sonarConnection: 'sonar-capstone'
   terraformDirectory: '.'
 
+# =======================
+# 1. SonarCloud Analysis
+# =======================
 stages:
-# =====================
-# 1. SonarQube Analysis
-# =====================
-- stage: SonarQube
-  displayName: 'SonarQube Code Analysis'
+- stage: SonarCloud
+  displayName: 'SonarCloud Code Analysis'
   jobs:
     - job: Sonar
       steps:
-        - task: SonarQubePrepare@5
+        - task: SonarCloudPrepare@1
           inputs:
-            SonarQube: $(sonarConnection)
+            SonarCloud: $(sonarConnection)
+            organization: 'devuser130746'                    # ✅ Your SonarCloud org
             scannerMode: 'CLI'
             configMode: 'manual'
             cliProjectKey: 'capstone'
+            cliProjectName: 'capstone'
             cliSources: '.'
 
         - script: |
-            echo "Dummy scan file" > sonar-dummy.py
             sonar-scanner \
               -Dsonar.projectKey=capstone \
+              -Dsonar.organization=devuser130746 \
               -Dsonar.sources=. \
-              -Dsonar.host.url=$(SONARQUBE_HOST_URL) \
-              -Dsonar.login=$(SONARQUBE_AUTH_TOKEN)
-          displayName: 'Run SonarQube Scanner'
+              -Dsonar.host.url=https://sonarcloud.io \
+              -Dsonar.login=$(SONAR_TOKEN)
+          displayName: 'Run SonarCloud Scanner'
 
-        - task: SonarQubePublish@5
+        - task: SonarCloudPublish@1
           inputs:
             pollingTimeoutSec: '300'
 
-# ======================
-# 2. Docker Build & Push
-# ======================
+# ============================
+# 2. Docker Build & Push Stage
+# ============================
 - stage: BuildAndPush
   displayName: 'Build and Push Docker Image'
-  dependsOn: SonarQube
+  dependsOn: SonarCloud
   jobs:
     - job: Build
       steps:
@@ -55,7 +58,7 @@ stages:
           displayName: 'Login to ACR'
           inputs:
             command: login
-            containerRegistry: $(azureServiceConnection)
+            containerRegistry: $(acrServiceConnection)
 
         - task: Docker@2
           displayName: 'Build Docker Image'
@@ -72,9 +75,9 @@ stages:
             tags: |
               $(imageName)
 
-# ==========================
-# 3. Terraform Provisioning
-# ==========================
+# ================================
+# 3. Terraform Infra Provisioning
+# ================================
 - stage: Terraform
   displayName: 'Terraform Provisioning'
   dependsOn: BuildAndPush
@@ -93,9 +96,9 @@ stages:
               terraform plan -out=tfplan
               terraform apply -auto-approve tfplan
 
-# =======================================
+# =========================================
 # 4. Deploy to Two AKS Clusters (Same RG)
-# =======================================
+# =========================================
 - stage: DeployToAKS
   displayName: 'Deploy to Both AKS Clusters'
   dependsOn: Terraform
