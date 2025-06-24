@@ -1,0 +1,136 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: ss-vm-agent-pool
+
+variables:
+  imageName: sethumadavacr.azurecr.io/capstone:$(Build.BuildId)
+  azureServiceConnection: 'terraform-service-connection'
+  sonarConnection: 'SonarQubeServiceConnection'
+  terraformDirectory: '.'
+
+stages:
+# =====================
+# 1. SonarQube Analysis
+# =====================
+- stage: SonarQube
+  displayName: 'SonarQube Code Analysis'
+  jobs:
+    - job: Sonar
+      steps:
+        - task: SonarQubePrepare@5
+          inputs:
+            SonarQube: $(sonarConnection)
+            scannerMode: 'CLI'
+            configMode: 'manual'
+            cliProjectKey: 'capstone'
+            cliSources: '.'
+
+        - script: |
+            echo "Dummy scan file" > sonar-dummy.py
+            sonar-scanner \
+              -Dsonar.projectKey=capstone \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=$(SONARQUBE_HOST_URL) \
+              -Dsonar.login=$(SONARQUBE_AUTH_TOKEN)
+          displayName: 'Run SonarQube Scanner'
+
+        - task: SonarQubePublish@5
+          inputs:
+            pollingTimeoutSec: '300'
+
+# ======================
+# 2. Docker Build & Push
+# ======================
+- stage: BuildAndPush
+  displayName: 'Build and Push Docker Image'
+  dependsOn: SonarQube
+  jobs:
+    - job: Build
+      steps:
+        - task: Docker@2
+          displayName: 'Login to ACR'
+          inputs:
+            command: login
+            containerRegistry: $(azureServiceConnection)
+
+        - task: Docker@2
+          displayName: 'Build Docker Image'
+          inputs:
+            command: build
+            Dockerfile: '**/Dockerfile'
+            tags: |
+              $(imageName)
+
+        - task: Docker@2
+          displayName: 'Push Docker Image'
+          inputs:
+            command: push
+            tags: |
+              $(imageName)
+
+# ==========================
+# 3. Terraform Provisioning
+# ==========================
+- stage: Terraform
+  displayName: 'Terraform Provisioning'
+  dependsOn: BuildAndPush
+  jobs:
+    - job: TerraformApply
+      steps:
+        - task: AzureCLI@2
+          displayName: 'Terraform Init and Apply'
+          inputs:
+            azureSubscription: $(azureServiceConnection)
+            scriptType: bash
+            scriptLocation: inlineScript
+            workingDirectory: $(terraformDirectory)
+            inlineScript: |
+              terraform init -upgrade
+              terraform plan -out=tfplan
+              terraform apply -auto-approve tfplan
+
+# =======================================
+# 4. Deploy to Two AKS Clusters (Same RG)
+# =======================================
+- stage: DeployToAKS
+  displayName: 'Deploy to Both AKS Clusters'
+  dependsOn: Terraform
+  jobs:
+    - job: DeployToCluster1
+      displayName: 'Deploy to AKS Cluster 1 (VNET1)'
+      steps:
+        - task: AzureCLI@2
+          displayName: 'Get AKS Credentials - Cluster 1'
+          inputs:
+            azureSubscription: $(azureServiceConnection)
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+              az aks get-credentials --resource-group sethu-rg --name sethu-aks-cluster-vnet1 --overwrite-existing
+
+        - script: |
+            sed -i "s|__CONTAINER_TAG__|$(imageName)|g" manifests/deployment.yml
+            kubectl apply -f manifests/
+          displayName: 'Deploy to AKS Cluster 1'
+
+    - job: DeployToCluster2
+      displayName: 'Deploy to AKS Cluster 2 (VNET2)'
+      dependsOn: DeployToCluster1
+      steps:
+        - task: AzureCLI@2
+          displayName: 'Get AKS Credentials - Cluster 2'
+          inputs:
+            azureSubscription: $(azureServiceConnection)
+            scriptType: bash
+            scriptLocation: inlineScript
+            inlineScript: |
+              az aks get-credentials --resource-group sethu-rg --name sethu-aks-cluster-vnet2 --overwrite-existing
+
+        - script: |
+            sed -i "s|__CONTAINER_TAG__|$(imageName)|g" manifests/deployment.yml
+            kubectl apply -f manifests/
+          displayName: 'Deploy to AKS Cluster 2'
