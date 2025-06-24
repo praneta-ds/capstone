@@ -124,7 +124,9 @@ stages:
         #   displayName: 'Deploy to AKS Cluster 1'
         - script: |
             imageName="sethumadavacr.azurecr.io/capstone:$(Build.BuildId)"
+            echo "Using image: $imageName"
             sed -i "s|__IMAGE_NAME__|$imageName|g" manifests/deployment.yml
+            cat manifests/deployment.yml
           displayName: "Inject full image name"
 
 
