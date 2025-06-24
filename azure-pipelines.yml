@@ -106,6 +106,8 @@ stages:
   displayName: 'Deploy to Both AKS Clusters'
   dependsOn: BuildAndPush
   jobs:
+
+    # ---------- Cluster 1 ----------
     - job: DeployToCluster1
       displayName: 'Deploy to AKS Cluster 1 (VNET1)'
       steps:
@@ -118,18 +120,20 @@ stages:
             inlineScript: |
               az aks get-credentials --resource-group sethu-rg --name sethu-aks-cluster-vnet1 --overwrite-existing
 
-        # - script: |
-        #     sed -i "s|__CONTAINER_TAG__|$(imageName)|g" manifests/deployment.yml
-        #     kubectl apply -f manifests/
-        #   displayName: 'Deploy to AKS Cluster 1'
         - script: |
+            echo "Injecting image name into deployment.yml"
             imageName="sethumadavacr.azurecr.io/capstone:$(Build.BuildId)"
-            echo "Using image: $imageName"
             sed -i "s|__IMAGE_NAME__|$imageName|g" manifests/deployment.yml
+            echo "Updated deployment.yml:"
             cat manifests/deployment.yml
-          displayName: "Inject full image name"
+          displayName: 'Inject Docker Image Name - Cluster 1'
 
+        - script: |
+            echo "Deploying to AKS Cluster 1"
+            kubectl apply -f manifests/
+          displayName: 'kubectl apply - Cluster 1'
 
+    # ---------- Cluster 2 ----------
     - job: DeployToCluster2
       displayName: 'Deploy to AKS Cluster 2 (VNET2)'
       dependsOn: DeployToCluster1
@@ -144,6 +148,14 @@ stages:
               az aks get-credentials --resource-group sethu-rg --name sethu-aks-cluster-vnet2 --overwrite-existing
 
         - script: |
-            sed -i "s|__CONTAINER_TAG__|$(imageName)|g" manifests/deployment.yml
+            echo "Injecting image name into deployment.yml"
+            imageName="sethumadavacr.azurecr.io/capstone:$(Build.BuildId)"
+            sed -i "s|__IMAGE_NAME__|$imageName|g" manifests/deployment.yml
+            echo "Updated deployment.yml:"
+            cat manifests/deployment.yml
+          displayName: 'Inject Docker Image Name - Cluster 2'
+
+        - script: |
+            echo "Deploying to AKS Cluster 2"
             kubectl apply -f manifests/
-          displayName: 'Deploy to AKS Cluster 2'
+          displayName: 'kubectl apply - Cluster 2'
