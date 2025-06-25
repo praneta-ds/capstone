@@ -1,89 +1,73 @@
-<h1 align=center>E-Commerce Website</h1>
+# Capstone Project - E-Commerce Flask App (CI/CD + AKS)
 
-Simple e-commerce website built with Flask and SQLite. Allows users to register, login, and purchase items. Also has an admin panel that allows administrators to view and manage users and items.
+This repository contains the source code, Dockerfile, Kubernetes manifests, and Azure DevOps pipeline configuration for deploying a monolithic Flask-based E-Commerce application to Azure Kubernetes Service (AKS).
 
-<h2 align=center>Go to the website<br>https://e-commerce2023.onrender.com</h2>
+## Key Features
 
-### Dependencies
-- Flask >= 2.2.5
-- SQLAlchemy >= 2.0.21
-- Flask-WTF >= 1.1.1
-- WTForms >= 3.0.1
-- Flask-Bcrypt >= 1.0.1
-- Flask-Login >= 0.6.2
-- gunicorn >= 21.2.0
+- Flask-based monolithic E-Commerce web app
+- SQLAlchemy for database ORM
+- Authentication, admin dashboard, and product management
+- Integrated CI/CD using Azure DevOps
+- Containerized using Docker
+- Deploys to AKS with YAML manifests
+- Azure SQL Database for backend
+- Integrated SonarQube code quality scan
+- Monitoring and centralized logging setup
 
----
+## Tech Stack
 
-### Installation
-#### 1. Clone the repository.
-> ```
-> git clone https://github.com/ahmednasser1601/e-commerce.git
-> ```
+- Python (Flask, SQLAlchemy)
+- Azure DevOps Pipelines
+- Docker
+- Kubernetes (AKS)
+- Azure SQL Database
+- Azure Container Registry (ACR)
+- SonarQube
 
-#### 2. Install the dependencies.
-> ```
-> pip install -r requirements.txt
-> ```
+## Project Structure
 
-#### 3. Create a database.
-> ```
-> sqlite3 e-commerce.db
-> ```
+capstone-main/
+│
+├── Dockerfile # Docker image definition
+├── Market/ # App code (routes, models, templates)
+├── main.py # Entry point
+├── db.py # DB connection (Azure SQL)
+├── manifests/ # Kubernetes YAML manifests
+├── azure-pipelines.yml # Azure DevOps pipeline for CI/CD
+├── test_sql.py / tests/ # Test files
+├── sonar-project.properties # SonarQube configuration
+└── requirements.txt # Python dependencies
 
-#### 4. Create the tables.
-> ```
-> CREATE TABLE users (
->     id INTEGER PRIMARY KEY AUTOINCREMENT,
->     username TEXT UNIQUE NOT NULL,
->     email_address TEXT UNIQUE NOT NULL,
->     password_hash TEXT NOT NULL,
->     budget INTEGER NOT NULL DEFAULT 10000
-> );
->
-> CREATE TABLE items (
->     id INTEGER PRIMARY KEY AUTOINCREMENT,
->     name TEXT UNIQUE NOT NULL,
->     barcode TEXT UNIQUE NOT NULL,
->     price INTEGER NOT NULL,
->     description TEXT NOT NULL,
->     owner INTEGER REFERENCES users (id)
-> );
-> ```
 
-#### 5. Run the website.
-> ```
-> python main.py
-> ```
+## CI/CD Pipeline
 
----
+1. **CI**:
+   - Triggered on code push
+   - Runs tests, SonarQube scan
+   - Builds Docker image, Trivy scan
+   - Pushes image to ACR
 
-### Usage
-> Register for an account.
+2. **CD**:
+   - Deploys latest image to AKS using `kubectl`
+   - Uses Kubernetes manifests (`manifests/` folder)
 
-> Login to your account.
+## Prerequisites
 
-> Browse the items for sale.
+- Azure DevOps account
+- Azure Kubernetes Service (AKS)
+- Azure Container Registry (ACR)
+- Azure SQL Database
+- SonarQube instance
 
-> Add items to your cart.
+## How to Run Locally
 
-> Checkout and pay for your items.
+```bash
+# Clone the repo
+git clone https://github.com/ssethumadav/capstone.git
+cd capstone-main
 
----
+# Install dependencies
+pip install -r requirements.txt
 
-### Admin Panel
-The admin panel allows administrators to view and manage users and items. It also has two tabs: "Control Users" and "Control Items" to easily view and manage.
-  * Username: admin
-  * Password: admin
-
----
-
-### Conclusion
-This is a simple e-commerce website built with Flask and SQLite. The website is easy to use and can be customized to meet your needs.
-
----
-
-### License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
+# Run locally
+python main.py
