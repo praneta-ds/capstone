@@ -1,0 +1,14 @@
+replicaCount: 1
+
+image:
+  repository: youracr.azurecr.io/capstone
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: LoadBalancer
+  port: 80
+
+csi:
+  secretProviderClass: azure-kvname
+  mountPath: /mnt/secrets
