@@ -16,9 +16,7 @@ variable "tenant_id" {
 variable "object_id" {
   
 }
-variable "secret_name" {
-  
-}
-variable "secret_value" {
-  
-}
+variable "db_server" {}
+variable "db_name" {}
+variable "db_user" {}
+variable "db_password" {}

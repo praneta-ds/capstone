@@ -36,7 +36,7 @@ variable "charset" {
 
 variable "collation" {
   type        = string
-  default     = "utf8_general_ci"
+  default     = "SQL_Latin1_General_CP1_CI_AS"
 }
 
 
@@ -50,7 +50,4 @@ variable "tags" {
   default = {}
 }
 
-variable "keyvault_id" {
-  type        = string
-  description = "Key Vault ID to store DB secrets"
-}
+

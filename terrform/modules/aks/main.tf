@@ -5,7 +5,7 @@ resource "azurerm_kubernetes_cluster" "demoaks" {
   dns_prefix = var.dns_prefix
 
   default_node_pool {
-    name = "default_node_pool"
+    name = "default"
     node_count = var.node_count
     vm_size = var.vm_size
   }

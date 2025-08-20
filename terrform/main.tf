@@ -35,11 +35,17 @@ module "keyvault" {
   source = "./modules/keyvault"
   rgname = var.resource_group_name
   location = var.location
-  name = var.key_vault_name
-  secret_name = var.secret_name
-  secret_value = module.Cosmos.primary_connection_string
+  name = var.key_vault_name 
+  db_server   = module.mysql.sql_server_fqdn
+  db_name     = module.mysql.db_name
+  db_user     = module.mysql.admin_user
+  db_password = module.mysql.admin_password
   tenant_id = data.azurerm_client_config.current.tenant_id
   object_id = data.azurerm_client_config.current.object_id
+  depends_on = [
+    module.resourcegroup,
+    module.mysql
+  ]
 }
 
 module "aks" {
@@ -50,6 +56,9 @@ module "aks" {
     dns_prefix = var.dns_prefix
     node_count = var.node_count
     vm_size = var.vmsize
+    depends_on = [
+    module.resourcegroup
+  ]
 }
 
 module "mysql" {
@@ -60,5 +69,7 @@ module "mysql" {
   admin_user           = var.admin_user
   admin_password       = var.admin_password
   db_name              = var.db_name
-  keyvault_id = module.keyvault.keyvault_id
+  depends_on = [
+    module.resourcegroup
+  ]
 }
